@@ -1,4 +1,4 @@
-# Krishi Sahayak (Farmer Assistant)
+# AgriSense AI
 
 Krishi Sahayak is a comprehensive digital platform designed to empower farmers with AI-driven insights. It features government scheme matchmaking, crop disease detection, yield prediction, and a RAG (Retrieval-Augmented Generation) based chat assistant.
 
