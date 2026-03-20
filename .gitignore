@@ -9,6 +9,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .venv/
+.venv*/
 .pytest_cache/
 .coverage
 .mypy_cache/
@@ -54,6 +55,26 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Flutter/Dart (found in agrisense/)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/agrisense/build/
+**/*.lock
+/agrisense/pubspec.lock
+flutter_analyze_output.txt
+
+# OS-specific
+__MACOSX/
+.DS_Store
+Thumbs.db
+
 # Other
 temp/
 tmp/
+*.pkl
+# !rag/rag/crop_yield_model.pkl # Keep if model is needed
