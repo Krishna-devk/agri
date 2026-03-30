@@ -1,5 +1,0 @@
-Name: ollama
-Version: 0.6.1
-Location: C:\Users\hp\work\crop_prediction_ui\rag\.venv\Lib\site-packages
-Requires: httpx, pydantic
-Required-by:

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -18,7 +19,7 @@ class FarmerProfile(Base):
     soil_type = Column(String(64), nullable=True)
     irrigation_method = Column(String(64), nullable=True)
     
-    photo_url = Column(String(500000), nullable=True) # For base64 or long image URLs
+    photo_url = Column(MEDIUMTEXT, nullable=True) # For base64 or long image URLs
     
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -12,7 +12,6 @@ from rag.retriever import match_schemes, ask_ai_question, generate_treatment_pla
 from rag.yield_predictor import predict_crop_yield
 from rag.weather_service import get_weather_data
 from rag.market_service import get_market_prices
-from rag.embedder import initialise
 
 router = APIRouter()
 
@@ -208,14 +207,16 @@ async def save_farmer_profile(profile_data: dict, db: Session = Depends(get_db))
 
     db_profile = db.query(FarmerProfile).filter(FarmerProfile.email == email).first()
 
+    # Use only keys that exist in the database model to avoid crashes
+    valid_data = {k: v for k, v in profile_data.items() if hasattr(FarmerProfile, k)}
+
     if db_profile:
         # Update existing
-        for key, value in profile_data.items():
-            if hasattr(db_profile, key):
-                setattr(db_profile, key, value)
+        for key, value in valid_data.items():
+            setattr(db_profile, key, value)
     else:
         # Create new
-        db_profile = FarmerProfile(**profile_data)
+        db_profile = FarmerProfile(**valid_data)
         db.add(db_profile)
 
     try:

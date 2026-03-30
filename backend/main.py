@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
+from api.database import engine, Base
+import api.db_models
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Government Scheme Matchmaker API",
