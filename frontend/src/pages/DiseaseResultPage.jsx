@@ -39,12 +39,9 @@ const DiseaseResultPage = () => {
     checkText.includes("not a plant") || 
     checkText.includes("image is not a plant") || 
     checkText.includes("not a leaf") || 
-    checkText.includes("unrecognized") || 
-    diseaseName === "N/A" || 
-    result.identified_crop === "N/A" ||
-    (result.identified_crop === "None" && !result.most_probable_disease)
+    (result.identified_crop === "None" && result.most_probable_disease === "Non-Crop Image Detected")
     
-  const isPlant = !hasNotPlantPhrase && result.identified_crop && result.identified_crop !== "N/A" && result.identified_crop !== "None"
+  const isPlant = !hasNotPlantPhrase && result.raw_analysis && result.raw_analysis.length > 50
   
   // Calculate a generic visual severity
   const severityVal = Math.max(0, Math.min(100, (1 - healthProb) * 100))
@@ -119,6 +116,20 @@ const DiseaseResultPage = () => {
       <div className="container result-page__body">
         <div className="result-grid">
           
+          {/* Crop Identification */}
+          <div className="result-card result-card--crop" style={{ borderLeft: '4px solid #14b8a6' }}>
+            <div className="result-card__header">
+              <span className="result-card__icon">🌾</span>
+              <h3>Identified Crop</h3>
+            </div>
+            <p className="description-text">
+              The AI has identified this crop as: <strong style={{color: '#0d9488'}}>{result.identified_crop}</strong>.
+            </p>
+            <p className="description-text" style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+              This identification is based on visual patterns in leaf structure and texture.
+            </p>
+          </div>
+
           {/* Visual Symptoms */}
           <div className="result-card result-card--symptoms">
             <div className="result-card__header">

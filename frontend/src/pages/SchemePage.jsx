@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import Toast from '../components/Toast'
 import './SchemePage.css'
 import WeatherWarningCard from '../components/WeatherWarningCard'
+import { useLocationData } from '../lib/useLocationData'
 
 const SchemePage = () => {
   const [form, setForm] = useState({
@@ -19,7 +20,41 @@ const SchemePage = () => {
   const [isRecording, setIsRecording] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const loadProfile = () => {
+      const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+      if (profile?.crop_type) {
+        setForm(prev => ({ ...prev, crop_type: profile.crop_type }));
+      }
+    };
+    loadProfile();
+    window.addEventListener('agrisense_profile_updated', loadProfile);
+    return () => window.removeEventListener('agrisense_profile_updated', loadProfile);
+  }, []);
+
+  useEffect(() => {
+    const loadProfile = () => {
+      const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+      if (profile?.crop_type) {
+        setForm(prev => ({ ...prev, crop_type: profile.crop_type }));
+      }
+    };
+    loadProfile();
+    window.addEventListener('agrisense_profile_updated', loadProfile);
+    return () => window.removeEventListener('agrisense_profile_updated', loadProfile);
+  }, []);
   const [toast, setToast] = useState(null)
+  const locationData = useLocationData()
+
+  // Auto-fill location field when GPS/profile sync fires
+  useEffect(() => {
+    if (!locationData.isLoaded || !locationData.city) return
+    setForm(prev => ({
+      ...prev,
+      location: prev.location || locationData.city,
+    }))
+  }, [locationData.city])
 
   useEffect(() => {
     // Check for profile to autofill
@@ -31,7 +66,11 @@ const SchemePage = () => {
         try {
           const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/profile/${email}`);
           if (res.ok) profile = await res.json();
-        } catch (e) { console.warn("Profile fetch failed"); }
+          if (profile) localStorage.setItem('agrisense_user_profile', JSON.stringify(profile));
+        } catch (e) { 
+          profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+          console.warn("Profile fetch failed"); 
+        }
       }
 
       // Check for global sync data
@@ -48,10 +87,12 @@ const SchemePage = () => {
       }))
 
       if (profile) showToast(`Welcome back! Your farm profile has been autofilled.`, 'success');
-      else if (!savedData) syncLocation(true);
+      else if (!savedData) syncLocation(silent = true);
     }
 
     loadProfile();
+    window.addEventListener('agrisense_profile_updated', loadProfile);
+    return () => window.removeEventListener('agrisense_profile_updated', loadProfile);
   }, [])
 
   const showToast = (message, type = 'success') => {

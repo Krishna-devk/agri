@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Toast from '../components/Toast'
 import './YieldPage.css'
 import WeatherWarningCard from '../components/WeatherWarningCard'
+import { useLocationData } from '../lib/useLocationData'
 
 const cropOptions = ['Wheat', 'Rice', 'Corn', 'Cotton', 'Soybean', 'Sugarcane', 'Potato', 'Tomato', 'Onion', 'Groundnut']
 const seasonOptions = ['Kharif (Monsoon)', 'Rabi (Winter)', 'Zaid (Summer)']
@@ -15,6 +16,18 @@ const YieldPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [toast, setToast] = useState(null)
+  const locationData = useLocationData()
+
+  // Auto-fill climate fields whenever locationData updates (GPS / profile sync)
+  useEffect(() => {
+    if (!locationData.isLoaded) return
+    setForm(prev => ({
+      ...prev,
+      temperature: prev.temperature || locationData.temperature,
+      humidity: prev.humidity || locationData.humidity,
+      rainfall: prev.rainfall || locationData.rainfall,
+    }))
+  }, [locationData.city, locationData.temperature])
 
   useEffect(() => {
     // Check for profile to autofill
@@ -26,7 +39,10 @@ const YieldPage = () => {
         try {
           const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/profile/${email}`);
           if (res.ok) profile = await res.json();
-        } catch (e) { console.warn("Profile fetch failed, falling back to local storage"); }
+          if (profile) localStorage.setItem('agrisense_user_profile', JSON.stringify(profile));
+        } catch (e) { 
+          profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+        }
       }
 
       const month = new Date().getMonth() + 1 
@@ -34,54 +50,8 @@ const YieldPage = () => {
       if (month >= 6 && month <= 10) seasonPrefix = 'Kharif (Monsoon)'
       else if (month >= 11 || month <= 2) seasonPrefix = 'Rabi (Winter)'
 
-      // PRIORITY 1: If profile has a location, fetch climate for THAT city
-      if (profile && profile.location) {
-        setForm(prev => ({
-          ...prev,
-          area: profile.land_size_acres || prev.area,
-          soil: profile.soil_type || prev.soil,
-          crop: profile.crop_type || prev.crop,
-          irrigation: profile.irrigation_method || prev.irrigation,
-          season: seasonPrefix
-        }))
-        
-        const cacheKey = `agrisense_session_yieldweather_${profile.location.replace(/[^a-zA-Z]/g, '').toLowerCase()}`
-        const cachedWeather = sessionStorage.getItem(cacheKey)
-
-        if (cachedWeather) {
-          const weatherData = JSON.parse(cachedWeather)
-          setForm(prev => ({
-            ...prev,
-            temperature: weatherData.temperature,
-            rainfall: weatherData.rainfall,
-            humidity: weatherData.humidity
-          }))
-        } else {
-          try {
-            const weatherRes = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/weather-sync`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ city: profile.location })
-            })
-            const weatherData = await weatherRes.json()
-            if (weatherData.status === 'success') {
-              setForm(prev => ({
-                ...prev,
-                temperature: weatherData.temperature,
-                rainfall: weatherData.rainfall,
-                humidity: weatherData.humidity
-              }))
-              sessionStorage.setItem(cacheKey, JSON.stringify(weatherData))
-            }
-          } catch (e) { console.warn("Profile location weather sync failed:", e); }
-        }
-        
-        showToast(`Welcome back! Climate autofilled for ${profile.location}.`, 'success');
-        return;
-      }
-
-      // PRIORITY 2: Use stored sync data (from GPS-based global sync)
-      const savedData = localStorage.getItem('agrisense_location_data_v2')
+      const syncDataStr = localStorage.getItem('agrisense_location_data_v2')
+      const syncData = syncDataStr ? JSON.parse(syncDataStr) : null
 
       setForm(prev => ({
         ...prev,
@@ -89,16 +59,22 @@ const YieldPage = () => {
         soil: profile?.soil_type || prev.soil,
         crop: profile?.crop_type || prev.crop,
         irrigation: profile?.irrigation_method || prev.irrigation,
-        temperature: savedData ? JSON.parse(savedData).temperature : prev.temperature,
-        rainfall: savedData ? JSON.parse(savedData).rainfall : prev.rainfall,
-        humidity: savedData ? JSON.parse(savedData).humidity : prev.humidity,
-        season: seasonPrefix
+        season: seasonPrefix,
+        temperature: syncData?.temperature || prev.temperature,
+        rainfall: syncData?.rainfall || prev.rainfall,
+        humidity: syncData?.humidity || prev.humidity
       }))
 
       if (profile) showToast(`Welcome back! Your farm profile has been autofilled.`, 'success');
     }
 
     loadProfile();
+    window.addEventListener('agrisense_profile_updated', loadProfile);
+    window.addEventListener('agrisense_location_synced', loadProfile);
+    return () => {
+      window.removeEventListener('agrisense_profile_updated', loadProfile);
+      window.removeEventListener('agrisense_location_synced', loadProfile);
+    };
   }, [])
 
   const showToast = (message, type = 'success') => {
@@ -131,93 +107,16 @@ const YieldPage = () => {
     }
   }
 
-  const syncLocation = (silent = false) => {
-    // PRIORITY 1: Check if farmer has a registered profile location
-    const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null')
-    
-    if (profile && profile.location) {
-      setIsSyncing(true)
-      fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/weather-sync`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ city: profile.location })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const month = new Date().getMonth() + 1
-          let season = 'Zaid (Summer)'
-          if (month >= 6 && month <= 10) season = 'Kharif (Monsoon)'
-          else if (month >= 11 || month <= 2) season = 'Rabi (Winter)'
-          
-          setForm(prev => ({
-            ...prev,
-            temperature: data.temperature,
-            rainfall: data.rainfall,
-            humidity: data.humidity,
-            season
-          }))
-          if (!silent) showToast(`📍 Synced with profile location: ${data.region_info}`, 'success')
-        }
-      })
-      .catch(err => {
-        console.error("Profile sync error:", err)
-        if (!silent) showToast("Failed to sync profile location.", 'error')
-      })
-      .finally(() => setIsSyncing(false))
-      return
-    }
-
-    // PRIORITY 2: GPS Fallback
-    if (!navigator.geolocation) {
-      if (!silent) showToast("Geolocation is not supported by your browser", "error")
-      return
-    }
-    
+  const syncLocation = () => {
     setIsSyncing(true)
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      try {
-        const { latitude, longitude } = position.coords
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/weather-sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lat: latitude, lon: longitude })
-        })
-        const data = await response.json()
-        
-        if (data.status === 'success') {
-          if (data.region_info.includes(',')) {
-            data.region_info = data.region_info.split(',')[0].trim();
-          }
-
-          setForm(prev => ({
-            ...prev,
-            temperature: data.temperature,
-            rainfall: data.rainfall,
-            humidity: data.humidity
-          }))
-          
-          const month = new Date().getMonth() + 1 
-          let season = 'Zaid (Summer)'
-          if (month >= 6 && month <= 10) season = 'Kharif (Monsoon)'
-          else if (month >= 11 || month <= 2) season = 'Rabi (Winter)'
-          
-          setForm(prev => ({ ...prev, season }))
-          
-          if (!silent) showToast(`Successfully synced with ${data.region_info}! Climate fields populated.`, 'success')
-        } else {
-          if (!silent) showToast("Could not fetch climate data. Please enter manually.", 'error')
-        }
-      } catch (err) {
-        console.error("Sync error:", err)
-        if (!silent) showToast("Failed to connect to backend for sync.", 'error')
-      } finally {
-        setIsSyncing(false)
-      }
-    }, () => {
-      if (!silent) showToast("Please allow location access to use Smart Sync", 'error')
+    // Dispatch to global sync logic in App.jsx (handles IP fallbacks & local storage)
+    window.dispatchEvent(new CustomEvent('agrisense_force_sync'))
+    
+    // Simulate UI delay since the actual hook updates fields reactively
+    setTimeout(() => {
       setIsSyncing(false)
-    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 })
+      showToast("Sync requested! Climate fields updated via global sync.", "success")
+    }, 1500)
   }
 
   const validate = () => {

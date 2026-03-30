@@ -10,13 +10,13 @@ const MarketPage = () => {
   const [hasSearched, setHasSearched] = useState(false)
   const [syncStatus, setSyncStatus] = useState('')
 
-  const performSearch = async (cropName) => {
+  const performSearch = async (cropName, districtFilter = '') => {
     if (!cropName.trim()) return
 
     const formattedCommodity = cropName.trim()[0].toUpperCase() + cropName.trim().slice(1).toLowerCase()
     
-    // CHECK CACHE FIRST
-    const cacheKey = `agrisense_session_market_${formattedCommodity}`
+    // CHECK CACHE (Include district in cache key if available)
+    const cacheKey = `agrisense_session_market_${formattedCommodity}_${districtFilter}`
     const cachedData = sessionStorage.getItem(cacheKey)
     
     if (cachedData) {
@@ -29,7 +29,7 @@ const MarketPage = () => {
     setError('')
     setHasSearched(true)
     setRecords([])
-    setSyncStatus('🛰️ Loading market prices...')
+    setSyncStatus(districtFilter ? `🛰️ Loading prices for ${districtFilter}...` : '🛰️ Loading market prices...')
 
     try {
       const apiKey = import.meta.env.VITE_MARKET_API_KEY
@@ -37,7 +37,13 @@ const MarketPage = () => {
         throw new Error('API Key is missing. Please add VITE_MARKET_API_KEY in .env.')
       }
       
-      const res = await fetch(`https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=${apiKey}&format=json&limit=100&filters[commodity]=${encodeURIComponent(formattedCommodity)}`)
+      let url = `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=${apiKey}&format=json&limit=100&filters[commodity]=${encodeURIComponent(formattedCommodity)}`
+      
+      if (districtFilter) {
+        url += `&filters[district]=${encodeURIComponent(districtFilter)}`
+      }
+
+      const res = await fetch(url)
       
       if (!res.ok) {
         throw new Error('Network response was not ok.')
@@ -71,10 +77,19 @@ const MarketPage = () => {
 
       const cropName = lastCrop.trim()[0].toUpperCase() + lastCrop.trim().slice(1).toLowerCase()
       setCommodity(cropName)
-      await performSearch(cropName)
+
+      // Get district from profile if available
+      let district = ''
+      if (profile?.location) {
+        district = profile.location.split(',')[0].trim()
+      }
+
+      await performSearch(cropName, district)
     }
 
     autoFillAndSearch()
+    window.addEventListener('agrisense_profile_updated', autoFillAndSearch)
+    return () => window.removeEventListener('agrisense_profile_updated', autoFillAndSearch)
   }, [])
 
   const fetchMarketPrices = async (e) => {

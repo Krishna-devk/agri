@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import Toast from '../components/Toast'
 import './TreatmentPage.css'
 import WeatherWarningCard from '../components/WeatherWarningCard'
@@ -15,6 +16,18 @@ const TreatmentPage = () => {
   const [toast, setToast] = useState(null)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const loadProfile = () => {
+      const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+      if (profile?.crop_type) {
+        setForm(prev => ({ ...prev, crop_type: profile.crop_type }));
+      }
+    };
+    loadProfile();
+    window.addEventListener('agrisense_profile_updated', loadProfile);
+    return () => window.removeEventListener('agrisense_profile_updated', loadProfile);
+  }, []);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type })
@@ -224,7 +237,7 @@ const TreatmentPage = () => {
                 </div>
 
                 <div className="pad-body markdown-content">
-                  <ReactMarkdown>{result.treatment_plan}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.treatment_plan}</ReactMarkdown>
                 </div>
 
                 <div className="pad-footer">

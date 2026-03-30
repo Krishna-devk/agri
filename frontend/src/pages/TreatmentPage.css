@@ -242,37 +242,136 @@
 }
 
 .pad-body {
-  padding: 2rem 3rem;
+  padding: 3rem 4rem;
   background: transparent;
-  min-height: 400px;
+  min-height: 500px;
+  position: relative;
 }
 
-/* Special Markdown Styling for Prescription */
+/* Watermark effect */
+.pad-body::before {
+  content: 'AgriSense AI';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 8rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.02);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.markdown-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Enhanced Table Styling for RX */
 .pad-body table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 2rem 0;
   background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 
 .pad-body th, .pad-body td {
-  border: 1px solid #cbd5e1;
-  padding: 0.75rem;
+  padding: 1rem 1.25rem;
   text-align: left;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .pad-body th {
-  background: #f8fafc;
-  color: #334155;
+  background: #0f766e;
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
 }
 
-.pad-body h1 { font-size: 1.6rem; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
-.pad-body h2 { font-size: 1.35rem; color: #115e59; margin-top: 2rem;}
-.pad-body h3 { font-size: 1.15rem; color: #0d9488; margin-top: 1.5rem;}
-.pad-body hr { border-color: #e2e8f0; margin: 2rem 0; }
-.pad-body ul { padding-left: 1.25rem; }
-.pad-body li { margin-bottom: 0.5rem; line-height: 1.6; }
-.pad-body p { line-height: 1.7; font-size: 1.05rem; color: #1e293b; }
+.pad-body tr:last-child td {
+  border-bottom: none;
+}
+
+.pad-body tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.pad-body tr:hover {
+  background: #f1f5f9;
+}
+
+.pad-body h1 { 
+  font-size: 1.8rem; 
+  color: #0f766e; 
+  border-bottom: 2px solid #e2e8f0; 
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  text-transform: capitalize;
+}
+
+.pad-body h2 { 
+  font-size: 1.4rem; 
+  color: #115e59; 
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pad-body h3 { 
+  font-size: 1.2rem; 
+  color: #0d9488; 
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.pad-body hr { 
+  border: none;
+  border-top: 2px dashed #e2e8f0; 
+  margin: 3rem 0; 
+}
+
+.pad-body ul, .pad-body ol { 
+  padding-left: 1.5rem; 
+  margin-bottom: 1.5rem;
+}
+
+.pad-body li { 
+  margin-bottom: 0.75rem; 
+  line-height: 1.6; 
+  position: relative;
+}
+
+.pad-body blockquote {
+  margin: 2rem 0;
+  padding: 1rem 2rem;
+  background: #f0fdf4;
+  border-left: 4px solid #10b981;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: #065f46;
+}
+
+.pad-body p { 
+  line-height: 1.8; 
+  font-size: 1.1rem; 
+  color: #334155; 
+  margin-bottom: 1.25rem;
+}
+
+.pad-body strong {
+  color: #111827;
+  font-weight: 700;
+}
 
 .pad-footer {
   padding: 2rem 3rem;

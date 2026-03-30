@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-
-
-
 import WeatherWarningCard from '../components/WeatherWarningCard'
+import { useLocationData } from '../lib/useLocationData'
 import './HomePage.css'
 
 
@@ -85,7 +83,7 @@ const diseases = [
 ]
 
 const HomePage = () => {
-
+  const locationData = useLocationData()
 
   return (
 
@@ -109,6 +107,20 @@ const HomePage = () => {
                 Empowering farmers with data-driven decisions for smarter, more sustainable agriculture.
               </p>
             </div>
+
+            {/* Live Location Weather Bar */}
+            {locationData.isLoaded && (
+              <div className="hero__location-bar animate-fadeInUp" id="location-weather-bar">
+                <span className="location-bar__pulse" />
+                <span className="location-bar__city">📍 {locationData.city}</span>
+                <div className="location-bar__divider" />
+                <span className="location-bar__stat">🌡️ {locationData.temperature}°C</span>
+                <span className="location-bar__stat">💧 {locationData.humidity}%</span>
+                <span className="location-bar__stat">🌧️ {locationData.rainfall}mm</span>
+                <Link to="/weather" className="location-bar__link">Full Forecast →</Link>
+              </div>
+            )}
+
             <div className="hero__actions">
 
               <Link to="/detect" className="btn btn-primary btn-lg" id="hero-detect-btn">

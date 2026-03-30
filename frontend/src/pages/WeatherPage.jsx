@@ -16,30 +16,39 @@ const WeatherPage = () => {
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
-    // PRIORITY 1: Check farmer's registered profile location
-    const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null')
-    
-    if (profile && profile.location && !weather) {
-      // Extract city name from "Pune, Maharashtra" → "Pune"
-      const profileCity = profile.location.split(',')[0].trim()
-      setCity(profileCity)
-      return // Don't run GPS or other fallbacks
-    }
+    const loadAndFetchWeather = () => {
+      // PRIORITY 1: Check farmer's registered profile location
+      const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null')
+      
+      if (profile && profile.location) {
+        // Extract city name from "Pune, Maharashtra" → "Pune"
+        const profileCity = profile.location.split(',')[0].trim()
+        setCity(profileCity)
+        fetchWeatherByCity(profileCity)
+        return // Don't run GPS or other fallbacks
+      }
 
-    // PRIORITY 2: Check localStorage sync data
-    const savedCity = localStorage.getItem('agrisense_weather_city')
-    const locationData = localStorage.getItem('agrisense_location_data')
+      // PRIORITY 2: Check localStorage sync data
+      const savedCity = localStorage.getItem('agrisense_weather_city')
+      const locationData = localStorage.getItem('agrisense_location_data_v2')
 
-    if (savedCity && !weather) {
-      setCity(savedCity)
-    } else if (locationData && !weather) {
-      const data = JSON.parse(locationData)
-      const cityName = data.region_info.split(',')[0].trim()
-      setCity(cityName)
-    } else {
-      // PRIORITY 3: GPS fallback
-      syncLocation(true)
-    }
+      if (savedCity) {
+        setCity(savedCity)
+        fetchWeatherByCity(savedCity)
+      } else if (locationData) {
+        const data = JSON.parse(locationData)
+        const cityName = data.region_info.split(',')[0].trim()
+        setCity(cityName)
+        fetchWeatherByCity(cityName)
+      } else {
+        // PRIORITY 3: GPS fallback
+        syncLocation(true)
+      }
+    };
+
+    loadAndFetchWeather();
+    window.addEventListener('agrisense_profile_updated', loadAndFetchWeather);
+    return () => window.removeEventListener('agrisense_profile_updated', loadAndFetchWeather);
   }, [])
 
   // Abstracted search function for reuse

@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react'
 import './WeatherWarningCard.css'
+import { useLocationData } from '../lib/useLocationData'
 
-const WeatherWarningCard = ({ city }) => {
-  // Use prop if provided, else use last searched city, else default to Pune
-  const activeCity = city || localStorage.getItem('agrisense_weather_city') || "Pune"
-  
+const WeatherWarningCard = ({ city: cityProp }) => {
+  const locationData = useLocationData()
+  // Use explicit prop first, then live synced city, never hardcode a default
+  const activeCity = cityProp || locationData.city || ''
+
   const [warnings, setWarnings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
+    const handleProfileUpdate = () => {
+       const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+       if (profile?.location) {
+         fetchWeatherForecast();
+       }
+    };
+    if (!activeCity) return // Wait until we have a real city
     fetchWeatherForecast()
+    window.addEventListener('agrisense_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('agrisense_profile_updated', handleProfileUpdate);
   }, [activeCity])
 
   const fetchWeatherForecast = async () => {

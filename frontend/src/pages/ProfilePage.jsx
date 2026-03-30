@@ -115,8 +115,8 @@ const ProfilePage = () => {
       }
       
       // Clear stale GPS-based location data so profile location takes priority
-      localStorage.removeItem('agrisense_last_sync')
-      localStorage.removeItem('agrisense_location_data')
+      localStorage.removeItem('agrisense_last_sync_v2')
+      localStorage.removeItem('agrisense_location_data_v2')
       localStorage.removeItem('agrisense_weather_city')
       localStorage.removeItem('agrisense_last_coords')
       
@@ -158,8 +158,8 @@ const ProfilePage = () => {
       localStorage.setItem('agrisense_user_email', form.email)
       localStorage.setItem('agrisense_user_profile', JSON.stringify(form))
       // Clear stale location data and re-sync using new profile location
-      localStorage.removeItem('agrisense_last_sync')
-      localStorage.removeItem('agrisense_location_data')
+      localStorage.removeItem('agrisense_last_sync_v2')
+      localStorage.removeItem('agrisense_location_data_v2')
       localStorage.removeItem('agrisense_weather_city')
       window.dispatchEvent(new Event('agrisense_force_profile_sync'))
       setToast({ message: `Profile saved! Syncing data for ${form.location || 'your location'}...`, type: 'success' })
@@ -179,8 +179,8 @@ const ProfilePage = () => {
     localStorage.removeItem('agrisense_user_profile')
     
     // Clear ALL location sync data so GPS fallback runs fresh
-    localStorage.removeItem('agrisense_last_sync')
-    localStorage.removeItem('agrisense_location_data')
+    localStorage.removeItem('agrisense_last_sync_v2')
+    localStorage.removeItem('agrisense_location_data_v2')
     localStorage.removeItem('agrisense_weather_city')
     localStorage.removeItem('agrisense_last_coords')
     localStorage.removeItem('agrisense_last_crop')

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Tilt from 'react-parallax-tilt'
 import './DiseasePage.css'
@@ -21,6 +21,18 @@ const DiseasePage = () => {
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const loadProfile = () => {
+      const profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
+      if (profile?.crop_type) {
+        setCropType(profile.crop_type);
+      }
+    };
+    loadProfile();
+    window.addEventListener('agrisense_profile_updated', loadProfile);
+    return () => window.removeEventListener('agrisense_profile_updated', loadProfile);
+  }, []);
 
   const handleFileChange = (file) => {
     if (file && file.type.startsWith('image/')) {
