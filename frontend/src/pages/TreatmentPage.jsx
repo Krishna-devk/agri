@@ -83,7 +83,7 @@ const TreatmentPage = () => {
     setIsLoading(true)
     
     try {
-      const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'
+      const backendUri = import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'
       const payload = {
         crop_type: form.crop_type,
         disease_info: form.disease_info

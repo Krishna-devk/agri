@@ -64,7 +64,7 @@ const SchemePage = () => {
 
       if (email) {
         try {
-          const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/profile/${email}`);
+          const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/profile/${email}`);
           if (res.ok) profile = await res.json();
           if (profile) localStorage.setItem('agrisense_user_profile', JSON.stringify(profile));
         } catch (e) { 
@@ -125,7 +125,7 @@ const SchemePage = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/weather-sync`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/weather-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lat: latitude, lon: longitude })
@@ -197,7 +197,7 @@ const SchemePage = () => {
     try {
       // Temporary: Replace with actual fetch to VITE_BACKEND_URI + '/api/v1/match'
       // For now we will mock the AI call with a simulated delay and mock payload if backend is not live
-      const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'
+      const backendUri = import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'
       const payload = {
         crop_type: form.crop_type,
         location: form.location,

@@ -55,3 +55,5 @@ Pillow>=10.0.0
 ollama
 pandas
 scikit-learn
+sqlalchemy==2.0.25
+mysql-connector-python==8.3.0

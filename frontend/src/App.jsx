@@ -19,7 +19,7 @@ import { useEffect } from 'react'
 
 function App() {
   useEffect(() => {
-    const BACKEND = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000';
+    const BACKEND = import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app';
     const COOLDOWN_MS = 1800000; // 30 minutes
 
     // Saves synced data to localStorage and notifies all listeners

@@ -31,7 +31,7 @@ const ProfilePage = () => {
   const saveProfile = async (payload) => {
     if (!payload.email) return false
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/profile`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -78,7 +78,7 @@ const ProfilePage = () => {
     
     setSyncing(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/profile/${email}`)
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/profile/${email}`)
       if (res.ok) {
         const data = await res.json()
         setForm(data)

@@ -37,7 +37,7 @@ const YieldPage = () => {
       
       if (email) {
         try {
-          const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/profile/${email}`);
+          const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/profile/${email}`);
           if (res.ok) profile = await res.json();
           if (profile) localStorage.setItem('agrisense_user_profile', JSON.stringify(profile));
         } catch (e) { 
@@ -163,7 +163,7 @@ const YieldPage = () => {
       if (cachedData) {
         resultData = JSON.parse(cachedData)
       } else {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/predict-yield`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/predict-yield`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

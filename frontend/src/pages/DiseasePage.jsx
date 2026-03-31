@@ -66,7 +66,7 @@ const DiseasePage = () => {
     setIsLoading(true)
 
     try {
-      const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'
+      const backendUri = import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'
       const formData = new FormData()
       formData.append('file', selectedFile)
       

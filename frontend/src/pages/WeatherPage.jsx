@@ -167,7 +167,7 @@ const WeatherPage = () => {
       try {
         const { latitude, longitude } = position.coords
         // Use our precise backend geocoding
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'http://localhost:8000'}/api/v1/weather-sync`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/weather-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lat: latitude, lon: longitude })
