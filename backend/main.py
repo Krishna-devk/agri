@@ -10,8 +10,6 @@ app = FastAPI(
     title="Government Scheme Matchmaker API",
     description="RAG-based API that matches farmers to government schemes based on their profile.",
     version="1.0.0",
-    docs_url="/docs",
-    openapi_url="/openapi.json",
 )
 
 app.add_middleware(
