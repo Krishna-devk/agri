@@ -118,11 +118,12 @@ function App() {
       );
     };
 
-    // Profile-city sync (logged-in users)
     const syncWithProfileCity = (city) => syncByCity(city, 'Profile');
 
-    // Wake-up ping for serverless backends (cold start)
     const pingBackend = async () => {
+      if (sessionStorage.getItem('agrisense_backend_pinged')) return;
+      sessionStorage.setItem('agrisense_backend_pinged', 'true');
+      
       try {
         console.log(`[Ping] Activating backend at ${BACKEND}...`);
         await fetch(BACKEND);
