@@ -34,7 +34,6 @@ pnpm-debug.log*
 .env.*
 !.env.example
 *.env
-*.env.*
 
 # Python
 __pycache__/
