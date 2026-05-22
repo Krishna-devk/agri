@@ -138,7 +138,7 @@ const TreatmentPage = () => {
       </div>
 
       <div className="container treatment-page__body">
-        <WeatherWarningCard />
+        {/* <WeatherWarningCard /> */}
         
         <div className={`treatment-layout ${result ? 'has-result' : ''}`}>
           {/* Form Side */}

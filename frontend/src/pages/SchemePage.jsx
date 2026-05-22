@@ -86,8 +86,7 @@ const SchemePage = () => {
         location: profile?.location || (savedData ? JSON.parse(savedData).region_info : prev.location)
       }))
 
-      if (profile) showToast(`Welcome back! Your farm profile has been autofilled.`, 'success');
-      else if (!savedData) syncLocation(silent = true);
+      if (!savedData) syncLocation(true);
     }
 
     loadProfile();
@@ -148,7 +147,7 @@ const SchemePage = () => {
     }, () => {
       if (!silent) showToast("Please allow location access to use Smart Sync", "error")
       setIsSyncing(false)
-    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 })
+    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 })
   }
 
   const toggleSpeech = () => {
@@ -282,7 +281,7 @@ const SchemePage = () => {
       </div>
 
       <div className="container scheme-page__body">
-        <WeatherWarningCard />
+        {/* <WeatherWarningCard /> */}
 
         {!result ? (
           <div className="scheme-layout">

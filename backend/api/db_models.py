@@ -19,7 +19,7 @@ class FarmerProfile(Base):
     soil_type = Column(String(64), nullable=True)
     irrigation_method = Column(String(64), nullable=True)
     
-    photo_url = Column(MEDIUMTEXT, nullable=True) # For base64 or long image URLs
+    photo_url = Column(Text().with_variant(MEDIUMTEXT(), 'mysql'), nullable=True) # For base64 or long image URLs
     
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())

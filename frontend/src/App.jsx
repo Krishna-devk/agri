@@ -88,13 +88,15 @@ function App() {
 
       const ipFallback = async () => {
         try {
-          console.log('[Sync] GPS unavailable. Trying ip-api.com...');
-          const ipRes = await fetch('http://ip-api.com/json/');
+          console.log('[Sync] GPS unavailable. Trying geojs.io...');
+          const ipRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
           const ipData = await ipRes.json();
-          if (ipData.status === 'success' && ipData.city && ipData.regionName) {
+          if (ipData.city && ipData.region) {
+            // Note: In India, ISPs often route traffic through regional hubs (e.g., Ludhiana, Chandigarh)
+            console.warn('[Sync] Using IP Location. This may be inaccurate due to ISP routing. Enable GPS for exact city.');
             await syncByCity(ipData.city, 'IP');
-          } else if (ipData.lat && ipData.lon) {
-            await syncByCoords(ipData.lat, ipData.lon, 'IP coords');
+          } else if (ipData.latitude && ipData.longitude) {
+            await syncByCoords(ipData.latitude, ipData.longitude, 'IP coords');
           }
         } catch (e) {
           console.error('[Sync] All fallbacks failed.', e);
@@ -112,7 +114,7 @@ function App() {
           console.warn('[Sync] GPS denied/failed:', err.message);
           ipFallback();
         },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
       );
     };
 

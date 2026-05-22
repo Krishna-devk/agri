@@ -34,18 +34,18 @@ const YieldPage = () => {
     const loadProfile = async () => {
       const email = localStorage.getItem('agrisense_user_email');
       let profile = null;
-      
+
       if (email) {
         try {
           const res = await fetch(`${import.meta.env.VITE_BACKEND_URI || 'https://agri-jet.vercel.app'}/api/v1/profile/${email}`);
           if (res.ok) profile = await res.json();
           if (profile) localStorage.setItem('agrisense_user_profile', JSON.stringify(profile));
-        } catch (e) { 
+        } catch (e) {
           profile = JSON.parse(localStorage.getItem('agrisense_user_profile') || 'null');
         }
       }
 
-      const month = new Date().getMonth() + 1 
+      const month = new Date().getMonth() + 1
       let seasonPrefix = 'Zaid (Summer)'
       if (month >= 6 && month <= 10) seasonPrefix = 'Kharif (Monsoon)'
       else if (month >= 11 || month <= 2) seasonPrefix = 'Rabi (Winter)'
@@ -111,7 +111,7 @@ const YieldPage = () => {
     setIsSyncing(true)
     // Dispatch to global sync logic in App.jsx (handles IP fallbacks & local storage)
     window.dispatchEvent(new CustomEvent('agrisense_force_sync'))
-    
+
     // Simulate UI delay since the actual hook updates fields reactively
     setTimeout(() => {
       setIsSyncing(false)
@@ -157,9 +157,9 @@ const YieldPage = () => {
       // CHECK CACHE FIRST
       const cacheKey = `agrisense_session_yieldpredict_${JSON.stringify(payload)}`
       const cachedData = sessionStorage.getItem(cacheKey)
-      
+
       let resultData;
-      
+
       if (cachedData) {
         resultData = JSON.parse(cachedData)
       } else {
@@ -169,7 +169,7 @@ const YieldPage = () => {
           body: JSON.stringify(payload)
         })
         resultData = await response.json()
-        
+
         if (resultData.status === 'success') {
           sessionStorage.setItem(cacheKey, JSON.stringify(resultData))
         }
@@ -217,7 +217,7 @@ const YieldPage = () => {
       </div>
 
       <div className="container yield-page__body">
-        <WeatherWarningCard />
+        {/* <WeatherWarningCard /> */}
         <div className="yield-layout">
           {/* Form */}
           <div className="glass-form-container glass shadow-elevated-lg">
@@ -251,153 +251,153 @@ const YieldPage = () => {
                 </div>
               )}
 
-            {/* Section 1: Crop Info */}
-            <div className="form-section">
-              <div className="form-section__header">
-                <span>🌾</span>
-                <h3>Crop Information</h3>
+              {/* Section 1: Crop Info */}
+              <div className="form-section">
+                <div className="form-section__header">
+                  <span>🌾</span>
+                  <h3>Crop Information</h3>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Crop Type *</label>
+                    <select name="crop" className={`form-select ${errors.crop ? 'input-error' : ''}`} value={form.crop} onChange={handleChange} id="crop-select">
+                      <option value="">— Select crop —</option>
+                      {cropOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    {errors.crop && <span className="error-msg">{errors.crop}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Area (Hectares) *</label>
+                    <input type="number" name="area" className={`form-input ${errors.area ? 'input-error' : ''}`} value={form.area} onChange={handleChange} placeholder="e.g. 2.5" min="0.1" step="0.1" id="area-input" />
+                    {errors.area && <span className="error-msg">{errors.area}</span>}
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Season *</label>
+                    <select name="season" className={`form-select ${errors.season ? 'input-error' : ''}`} value={form.season} onChange={handleChange} id="season-select">
+                      <option value="">— Select season —</option>
+                      {seasonOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    {errors.season && <span className="error-msg">{errors.season}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Soil Type *</label>
+                    <select name="soil" className={`form-select ${errors.soil ? 'input-error' : ''}`} value={form.soil} onChange={handleChange} id="soil-select">
+                      <option value="">— Select soil —</option>
+                      {soilOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    {errors.soil && <span className="error-msg">{errors.soil}</span>}
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Irrigation Method</label>
+                    <select name="irrigation" className="form-select" value={form.irrigation} onChange={handleChange} id="irrigation-select">
+                      <option value="">— Select —</option>
+                      {irrigationOptions.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Fertilizer Type</label>
+                    <select name="fertilizer" className="form-select" value={form.fertilizer} onChange={handleChange} id="fertilizer-select">
+                      <option value="">— Select —</option>
+                      {fertilizerOptions.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Crop Type *</label>
-                  <select name="crop" className={`form-select ${errors.crop ? 'input-error' : ''}`} value={form.crop} onChange={handleChange} id="crop-select">
-                    <option value="">— Select crop —</option>
-                    {cropOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  {errors.crop && <span className="error-msg">{errors.crop}</span>}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Area (Hectares) *</label>
-                  <input type="number" name="area" className={`form-input ${errors.area ? 'input-error' : ''}`} value={form.area} onChange={handleChange} placeholder="e.g. 2.5" min="0.1" step="0.1" id="area-input" />
-                  {errors.area && <span className="error-msg">{errors.area}</span>}
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Season *</label>
-                  <select name="season" className={`form-select ${errors.season ? 'input-error' : ''}`} value={form.season} onChange={handleChange} id="season-select">
-                    <option value="">— Select season —</option>
-                    {seasonOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  {errors.season && <span className="error-msg">{errors.season}</span>}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Soil Type *</label>
-                  <select name="soil" className={`form-select ${errors.soil ? 'input-error' : ''}`} value={form.soil} onChange={handleChange} id="soil-select">
-                    <option value="">— Select soil —</option>
-                    {soilOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  {errors.soil && <span className="error-msg">{errors.soil}</span>}
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Irrigation Method</label>
-                  <select name="irrigation" className="form-select" value={form.irrigation} onChange={handleChange} id="irrigation-select">
-                    <option value="">— Select —</option>
-                    {irrigationOptions.map(i => <option key={i} value={i}>{i}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Fertilizer Type</label>
-                  <select name="fertilizer" className="form-select" value={form.fertilizer} onChange={handleChange} id="fertilizer-select">
-                    <option value="">— Select —</option>
-                    {fertilizerOptions.map(f => <option key={f} value={f}>{f}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
 
-            {/* Section 2: Climate */}
+              {/* Section 2: Climate */}
               <div className="form-section">
                 <div className="form-section__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🌦️</span>
                     <h3>Climate Parameters</h3>
                   </div>
-                  <button 
-                    type="button" 
-                    className={`btn-sync ${isSyncing ? 'syncing' : ''}`} 
+                  <button
+                    type="button"
+                    className={`btn-sync ${isSyncing ? 'syncing' : ''}`}
                     onClick={syncLocation}
                     disabled={isSyncing}
                   >
                     {isSyncing ? '⌛ Syncing...' : '📍 Smart Sync Location'}
                   </button>
                 </div>
-              <div className="form-row form-row--3">
-                <div className="form-group">
-                  <label className="form-label">Annual Rainfall (mm) *</label>
-                  <input type="number" name="rainfall" className={`form-input ${errors.rainfall ? 'input-error' : ''}`} value={form.rainfall} onChange={handleChange} placeholder="e.g. 850" id="rainfall-input" />
-                  {errors.rainfall && <span className="error-msg">{errors.rainfall}</span>}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Avg Temperature (°C) *</label>
-                  <input type="number" name="temperature" className={`form-input ${errors.temperature ? 'input-error' : ''}`} value={form.temperature} onChange={handleChange} placeholder="e.g. 28" id="temp-input" />
-                  {errors.temperature && <span className="error-msg">{errors.temperature}</span>}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Humidity (%)</label>
-                  <input type="number" name="humidity" className="form-input" value={form.humidity} onChange={handleChange} placeholder="e.g. 65" min="0" max="100" id="humidity-input" />
-                </div>
-              </div>
-            </div>
-
-            {/* Section 3: Soil Nutrients */}
-            <div className="form-section">
-              <div className="form-section__header">
-                <span>🧪</span>
-                <h3>Soil Nutrients (Optional)</h3>
-              </div>
-              <div className="form-row form-row--4">
-                <div className="form-group">
-                  <label className="form-label">pH Level</label>
-                  <input type="number" name="ph" className="form-input" value={form.ph} onChange={handleChange} placeholder="6.5" min="0" max="14" step="0.1" id="ph-input" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Nitrogen (kg/ha)</label>
-                  <input type="number" name="nitrogen" className="form-input" value={form.nitrogen} onChange={handleChange} placeholder="80" id="nitrogen-input" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Phosphorus (kg/ha)</label>
-                  <input type="number" name="phosphorus" className="form-input" value={form.phosphorus} onChange={handleChange} placeholder="40" id="phosphorus-input" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Potassium (kg/ha)</label>
-                  <input type="number" name="potassium" className="form-input" value={form.potassium} onChange={handleChange} placeholder="40" id="potassium-input" />
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" className={`btn btn-teal btn-predict btn-squishy ${isLoading ? 'loading' : ''}`} disabled={isLoading} id="predict-btn">
-
-              {isLoading ? (
-                <>
-                  <div className="cube-loader-container">
-                    <div className="cube-loader">
-                      <div className="cube-face cube-front"></div>
-                      <div className="cube-face cube-back"></div>
-                      <div className="cube-face cube-left"></div>
-                      <div className="cube-face cube-right"></div>
-                      <div className="cube-face cube-top"></div>
-                      <div className="cube-face cube-bottom"></div>
-                    </div>
+                <div className="form-row form-row--3">
+                  <div className="form-group">
+                    <label className="form-label">Annual Rainfall (mm) *</label>
+                    <input type="number" name="rainfall" className={`form-input ${errors.rainfall ? 'input-error' : ''}`} value={form.rainfall} onChange={handleChange} placeholder="e.g. 850" id="rainfall-input" />
+                    {errors.rainfall && <span className="error-msg">{errors.rainfall}</span>}
                   </div>
-                  <div className="processing-text">Processing AI Data...</div>
-                </>
-              ) : (
-                <>📊 Predict Yield</>
-              )}
-            </button>
-
-
-            {isLoading && (
-              <div className="loading-steps">
-                <div className="loading-step active">📥 Processing parameters...</div>
-                <div className="loading-step">🧠 Running XGBoost model...</div>
-                <div className="loading-step">📊 Calculating ensemble results...</div>
+                  <div className="form-group">
+                    <label className="form-label">Avg Temperature (°C) *</label>
+                    <input type="number" name="temperature" className={`form-input ${errors.temperature ? 'input-error' : ''}`} value={form.temperature} onChange={handleChange} placeholder="e.g. 28" id="temp-input" />
+                    {errors.temperature && <span className="error-msg">{errors.temperature}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Humidity (%)</label>
+                    <input type="number" name="humidity" className="form-input" value={form.humidity} onChange={handleChange} placeholder="e.g. 65" min="0" max="100" id="humidity-input" />
+                  </div>
+                </div>
               </div>
-            )}
-          </form>
+
+              {/* Section 3: Soil Nutrients */}
+              <div className="form-section">
+                <div className="form-section__header">
+                  <span>🧪</span>
+                  <h3>Soil Nutrients (Optional)</h3>
+                </div>
+                <div className="form-row form-row--4">
+                  <div className="form-group">
+                    <label className="form-label">pH Level</label>
+                    <input type="number" name="ph" className="form-input" value={form.ph} onChange={handleChange} placeholder="6.5" min="0" max="14" step="0.1" id="ph-input" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Nitrogen (kg/ha)</label>
+                    <input type="number" name="nitrogen" className="form-input" value={form.nitrogen} onChange={handleChange} placeholder="80" id="nitrogen-input" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phosphorus (kg/ha)</label>
+                    <input type="number" name="phosphorus" className="form-input" value={form.phosphorus} onChange={handleChange} placeholder="40" id="phosphorus-input" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Potassium (kg/ha)</label>
+                    <input type="number" name="potassium" className="form-input" value={form.potassium} onChange={handleChange} placeholder="40" id="potassium-input" />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" className={`btn btn-teal btn-predict btn-squishy ${isLoading ? 'loading' : ''}`} disabled={isLoading} id="predict-btn">
+
+                {isLoading ? (
+                  <>
+                    <div className="cube-loader-container">
+                      <div className="cube-loader">
+                        <div className="cube-face cube-front"></div>
+                        <div className="cube-face cube-back"></div>
+                        <div className="cube-face cube-left"></div>
+                        <div className="cube-face cube-right"></div>
+                        <div className="cube-face cube-top"></div>
+                        <div className="cube-face cube-bottom"></div>
+                      </div>
+                    </div>
+                    <div className="processing-text">Processing AI Data...</div>
+                  </>
+                ) : (
+                  <>📊 Predict Yield</>
+                )}
+              </button>
+
+
+              {isLoading && (
+                <div className="loading-steps">
+                  <div className="loading-step active">📥 Processing parameters...</div>
+                  <div className="loading-step">🧠 Running XGBoost model...</div>
+                  <div className="loading-step">📊 Calculating ensemble results...</div>
+                </div>
+              )}
+            </form>
           </div>
 
 
@@ -428,10 +428,10 @@ const YieldPage = () => {
         </div>
       </div>
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast(null)} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>

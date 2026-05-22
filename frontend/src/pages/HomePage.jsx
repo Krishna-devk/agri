@@ -204,7 +204,7 @@ const HomePage = () => {
       </section>
 
 
-      <WeatherWarningCard />
+      {/* <WeatherWarningCard /> */}
 
       <section className="features section">
         <div className="container">

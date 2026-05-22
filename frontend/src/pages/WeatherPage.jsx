@@ -201,7 +201,7 @@ const WeatherPage = () => {
     }, () => {
       showToast("Location access denied.", "error")
       setIsSyncing(false)
-    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 })
+    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 })
   }
 
   const toggleSpeech = () => {

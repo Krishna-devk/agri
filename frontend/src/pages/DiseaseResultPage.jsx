@@ -43,6 +43,78 @@ const DiseaseResultPage = () => {
     
   const isPlant = !hasNotPlantPhrase && result.raw_analysis && result.raw_analysis.length > 50
   
+  if (!isPlant) {
+    return (
+      <div className="result-page non-crop-page">
+        {/* Header Area */}
+        <div className="result-page__header" style={{ background: `linear-gradient(135deg, #64748b22, #64748b11)`, borderBottom: `3px solid #64748b40` }}>
+          <div className="container">
+            <div className="result-header__top">
+              <button className="back-btn" onClick={() => navigate('/detect')} id="back-detect-btn">
+                ← Back to Detection
+              </button>
+              <div className="result-badge" style={{ background: '#f1f5f9', color: '#64748b' }}>
+                ℹ️ Non-Crop Image Detected
+              </div>
+            </div>
+            
+            <div className="result-header__main">
+              <div className="result-header__info">
+                <div className="section-tag" style={{ background: '#e2e8f0', color: '#475569' }}>🔍 Image Verification</div>
+                <h1 style={{ color: '#1e293b' }}>Non-Agricultural Image Detected</h1>
+                <p className="pathogen-label" style={{ fontSize: '1rem', color: '#64748b', marginTop: '0.5rem' }}>
+                  The uploaded photo does not contain a recognizable crop, leaf, or plant.
+                </p>
+              </div>
+              
+              <div className="result-header__image">
+                {result.imageUrl && (
+                  <img src={result.imageUrl} alt="Uploaded non-crop" className="result-leaf-img" style={{ border: '3px solid #cbd5e1' }} />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Body Area */}
+        <div className="container result-page__body" style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div className="result-card shadow-elevated-lg" style={{ borderTop: '4px solid #64748b', padding: '2.5rem', background: '#ffffff', borderRadius: '16px' }}>
+            <div className="result-card__header" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontSize: '2.5rem' }}>🚫</span>
+              <div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>Analysis Refused</h3>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: '#64748b' }}>Our AI specializes in crop health diagnostics</p>
+              </div>
+            </div>
+            
+            <div className="expanded-markdown" style={{ color: '#334155', lineHeight: '1.8' }}>
+              <ReactMarkdown>{result.raw_analysis || result.recommendations}</ReactMarkdown>
+            </div>
+
+            <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <h4 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.05rem', fontWeight: 700 }}>💡 Helpful Guidelines:</h4>
+              <ul style={{ paddingLeft: '1.25rem', margin: 0, color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.95rem' }}>
+                <li>Make sure the leaf/crop is the central subject of the picture.</li>
+                <li>Avoid pictures containing human faces, animals, vehicles, screenshots, or indoor household items.</li>
+                <li>Provide good, direct lighting and avoid blurry or highly pixelated photos.</li>
+                <li>If the crop is extremely rare or seedling, ensure a clear, well-focused close-up of a leaf.</li>
+              </ul>
+            </div>
+
+            <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <Link to="/detect" className="btn btn-primary btn-lg" id="try-again-scan-btn" style={{ background: '#475569', borderColor: '#475569' }}>
+                🔄 Try Another Image
+              </Link>
+              <Link to="/" className="btn btn-outline btn-lg">
+                🏡 Go to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
   // Calculate a generic visual severity
   const severityVal = Math.max(0, Math.min(100, (1 - healthProb) * 100))
   let sevConfig = { color: '#22c55e', bg: '#dcfce7', label: 'Healthy / No Risk', icon: '✅' }

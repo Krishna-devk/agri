@@ -223,6 +223,7 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
 
         # Step 1: Image analysis — nvidia/nemotron-nano-12b-v2-vl:free via OpenRouter
         print(f"[Vision] Sending image to {VISION_MODEL} via OpenRouter...")
+        vision_analysis = ""
         try:
             vision_response = ai_vision_client.chat.completions.create(
                 model=VISION_MODEL,
@@ -234,14 +235,11 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
                                 "type": "text",
                                 "text": (
                                     "You are an expert agronomist examining a crop photograph.\n"
-                                    "CRITICAL: You MUST correctly differentiate between Potato and Tomato leaves.\n"
-                                    " - Potato leaves are compound with large terminal leaflets and smaller lateral leaflets, often with a rougher texture and entire (smooth) or slightly wavy margins.\n"
-                                    " - Tomato leaves are deeply lobed, highly serrated (jagged edges), and have a very distinct jagged/pointed appearance.\n"
-                                    "Your task:\n"
+                                    "CRITICAL: If the image clearly shows a non-agricultural object (such as a person, car, animal, building, electronic device, furniture, or any random object that is NOT a crop, plant, or leaf), you MUST output ONLY the word 'NOT_A_PLANT' and absolutely nothing else. Do not attempt to describe the object or analyze it. Just output 'NOT_A_PLANT'.\n"
+                                    "Otherwise, if it is indeed a plant/crop/leaf, perform your task:\n"
                                     "1. Analyze the leaf structure step-by-step (compound vs lobed, margins, texture) before declaring the crop name. State the exact crop categorically (e.g., Potato, Tomato, Rice).\n"
                                     "2. Describe in detail any visible symptoms of disease or pests.\n"
-                                    "3. Suggest the most probable disease name based on the symptoms.\n"
-                                    "ONLY if the image clearly shows a non-agricultural object, write: NOT_A_PLANT."
+                                    "3. Suggest the most probable disease name based on the symptoms."
                                 )
                             },
                             {"type": "image_url", "image_url": {"url": image_data_url}},
@@ -250,24 +248,102 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
                 ],
                 temperature=0.1,
             )
-            vision_analysis = vision_response.choices[0].message.content or ""
-            print(f"[Vision] nvidia analysis complete ({len(vision_analysis)} chars).")
+            if hasattr(vision_response, 'choices') and vision_response.choices:
+                vision_analysis = vision_response.choices[0].message.content or ""
+                print(f"[Vision] nvidia analysis complete ({len(vision_analysis)} chars).")
+            else:
+                print(f"[Vision] nvidia call returned no choices: {vision_response}")
+                raise ValueError("No choices returned from OpenRouter vision endpoint.")
         except Exception as e:
-            print(f"[Vision] nvidia call failed: {e}")
-            # Fallback: ask GPT-OSS on Groq to do a text-only best-effort diagnosis
-            vision_analysis = (
-                "Vision unavailable. Based on common Indian agricultural diseases, "
-                "please provide a best-effort diagnosis and treatment for the most "
-                "likely diseases for a common crop."
-            )
+            print(f"[Vision] nvidia call failed: {e}. Trying fallback to nvidia/llama-nemotron-embed-vl-1b-v2:free...")
+            try:
+                vision_response = ai_vision_client.chat.completions.create(
+                    model="nvidia/llama-nemotron-embed-vl-1b-v2:free",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": (
+                                        "You are an expert agronomist examining a crop photograph.\n"
+                                        "CRITICAL: If the image clearly shows a non-agricultural object (such as a person, car, animal, building, electronic device, furniture, or any random object that is NOT a crop, plant, or leaf), you MUST output ONLY the word 'NOT_A_PLANT' and absolutely nothing else. Do not attempt to describe the object or analyze it. Just output 'NOT_A_PLANT'.\n"
+                                        "Otherwise, if it is indeed a plant/crop/leaf, perform your task:\n"
+                                        "1. Analyze the leaf structure step-by-step (compound vs lobed, margins, texture) before declaring the crop name. State the exact crop categorically (e.g., Potato, Tomato, Rice).\n"
+                                        "2. Describe in detail any visible symptoms of disease or pests.\n"
+                                        "3. Suggest the most probable disease name based on the symptoms."
+                                    )
+                                },
+                                {"type": "image_url", "image_url": {"url": image_data_url}},
+                            ],
+                        }
+                    ],
+                    temperature=0.1,
+                )
+                if hasattr(vision_response, 'choices') and vision_response.choices:
+                    vision_analysis = vision_response.choices[0].message.content or ""
+                    print(f"[Vision] Fallback nvidia/llama-nemotron-embed-vl-1b-v2:free analysis complete ({len(vision_analysis)} chars).")
+                else:
+                    print(f"[Vision] Fallback nvidia/llama-nemotron-embed-vl-1b-v2:free returned no choices: {vision_response}")
+                    raise ValueError("No choices returned from fallback vision endpoint.")
+            except Exception as fe:
+                print(f"[Vision] Fallback nvidia/llama-nemotron-embed-vl-1b-v2:free failed: {fe}. Trying tertiary fallback meta-llama/llama-3.2-11b-vision-instruct...")
+                try:
+                    vision_response = ai_vision_client.chat.completions.create(
+                        model="meta-llama/llama-3.2-11b-vision-instruct",
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": (
+                                            "You are an expert agronomist examining a crop photograph.\n"
+                                            "CRITICAL: If the image clearly shows a non-agricultural object (such as a person, car, animal, building, electronic device, furniture, or any random object that is NOT a crop, plant, or leaf), you MUST output ONLY the word 'NOT_A_PLANT' and absolutely nothing else. Do not attempt to describe the object or analyze it. Just output 'NOT_A_PLANT'.\n"
+                                            "Otherwise, if it is indeed a plant/crop/leaf, perform your task:\n"
+                                            "1. Analyze the leaf structure step-by-step (compound vs lobed, margins, texture) before declaring the crop name. State the exact crop categorically (e.g., Potato, Tomato, Rice).\n"
+                                            "2. Describe in detail any visible symptoms of disease or pests.\n"
+                                            "3. Suggest the most probable disease name based on the symptoms."
+                                        )
+                                    },
+                                    {"type": "image_url", "image_url": {"url": image_data_url}},
+                                ],
+                            }
+                        ],
+                        temperature=0.1,
+                    )
+                    if hasattr(vision_response, 'choices') and vision_response.choices:
+                        vision_analysis = vision_response.choices[0].message.content or ""
+                        print(f"[Vision] Tertiary Llama-3.2 vision fallback analysis complete ({len(vision_analysis)} chars).")
+                    else:
+                        raise ValueError("No choices returned from tertiary vision fallback.")
+                except Exception as llama_err:
+                    print(f"[Vision] Tertiary fallback also failed: {llama_err}")
+                    # Fallback: flag vision as unavailable so we don't attempt fake diagnosis
+                    vision_analysis = "VISION_UNAVAILABLE"
 
         # --- SECURITY FILTER: Guard against Non-Plant Hallucinations ---
-        agri_keywords = ["leaf", "plant", "crop", "vegetable", "fruit", "disease", "pest", "symptom", "blight", "spot", "wilt", "farm", "agriculture", "herb", "shrub", "tree", "analysis"]
-        is_not_plant = "NOT_A_PLANT" in vision_analysis.upper()
-        # If it explicitly says it is not a plant, but then mentions leaves/crops, we ignore the rejection.
-        has_keywords = any(kw in vision_analysis.lower() for kw in agri_keywords)
+        if "VISION_UNAVAILABLE" in vision_analysis.upper():
+            return {
+                "raw_analysis": (
+                    "### 🤖 AgriSense AI Assistant\n\n"
+                    "Our visual analysis engine is temporarily busy or undergoing routine maintenance. 🌧️\n\n"
+                    "Please try again in a few moments with a clear, close-up photo of the affected crop or leaf. Thank you for your patience! ✨"
+                ),
+                "identified_crop": "None",
+                "visual_symptoms": "Service temporarily busy.",
+                "crop_health_probability": None,
+                "most_probable_disease": "Vision Engine Offline",
+                "identified_issues": [],
+                "weather_causes": "N/A",
+                "recommendations": "Please try uploading your leaf image again in a moment.",
+                "confidence_description": "N/A",
+                "ndvi_score": None
+            }
 
-        if is_not_plant and not has_keywords:
+        is_not_plant = "NOT_A_PLANT" in vision_analysis.upper() or "NOT A PLANT" in vision_analysis.upper()
+
+        if is_not_plant:
             return {
                 "raw_analysis": (
                     "### 🤖 AgriSense AI Assistant\n\n"
@@ -276,9 +352,13 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
                 ),
                 "identified_crop": "None",
                 "visual_symptoms": "High confidence: Non-agricultural subject matter.",
+                "crop_health_probability": None,
                 "most_probable_disease": "Non-Crop Image Detected",
-                "identified_issues": [], "weather_causes": "N/A", "recommendations": "Provide a plant photo.",
-                "confidence_description": "N/A", "ndvi_score": None
+                "identified_issues": [],
+                "weather_causes": "N/A",
+                "recommendations": "Please upload a clear, close-up photo of a crop or leaf.",
+                "confidence_description": "N/A",
+                "ndvi_score": None
             }
 
         # Step 2: Refinement — openai/gpt-oss-120b via Groq
@@ -292,7 +372,7 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
                     "You have received a visual description of a crop image from a vision AI. "
                     "Your job is to produce a professional structured diagnostic report in the exact format below.\n"
                     "CRITICAL: If the vision AI describes characteristics of a Potato (compound, rough, smoother edges) but calls it a Tomato, CORRECT IT to Potato. If it describes a Tomato (deeply lobed, serrated/jagged) but calls it a Potato, CORRECT IT to Tomato. The final crop name MUST logically match the physical description.\n"
-                    "Only output 'NOT_A_PLANT' if the vision input explicitly says the image is not a plant."
+                    "If the vision input indicates that the image is NOT a plant or contains 'NOT_A_PLANT', or if the description describes a non-agricultural object (like a car, dog, person, building, household item, etc.), you MUST output ONLY the word 'NOT_A_PLANT' and nothing else."
                 )
             },
             {"role": "user", "content": (
@@ -309,18 +389,44 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
         reasoning_text = _openrouter_chat_completion(TEXT_MODEL, refinement_messages)
         print(f"[Text] GPT-OSS refinement complete ({len(reasoning_text)} chars).")
 
-        if not reasoning_text or "NOT_A_PLANT" in reasoning_text.upper():
+        if not reasoning_text or "NOT_A_PLANT" in reasoning_text.upper() or "NOT A PLANT" in reasoning_text.upper():
              return {
-                "raw_analysis": "Invalid analysis result. Please upload a clear plant photo.",
-                "identified_crop": "None", "visual_symptoms": "N/A", "most_probable_disease": "Non-Crop Image Detected",
-                "identified_issues": [], "weather_causes": "N/A", "recommendations": "N/A", 
-                "confidence_description": "N/A", "ndvi_score": None
+                "raw_analysis": (
+                    "### 🤖 AgriSense AI Assistant\n\n"
+                    "I am your **AgriSense bot**! I've analyzed your photo, but it **doesn't appear to be a crop, plant, or leaf**. \n\n"
+                    "I am specialized in agricultural diagnosis. To help you better, please upload a clear, close-up photo of a crop or leaf. ✨"
+                ),
+                "identified_crop": "None",
+                "visual_symptoms": "High confidence: Non-agricultural subject matter.",
+                "crop_health_probability": None,
+                "most_probable_disease": "Non-Crop Image Detected",
+                "identified_issues": [],
+                "weather_causes": "N/A",
+                "recommendations": "Please upload a clear, close-up photo of a crop or leaf.",
+                "confidence_description": "N/A",
+                "ndvi_score": None
             }
 
         def extract_section(full_text: str, heading: str) -> str:
-            pattern = rf"\*\*{heading}\*\*\s*(.*?)(?=\*\*|$)"
-            match = re.search(pattern, full_text, re.DOTALL | re.IGNORECASE)
-            return match.group(1).strip() if match else ""
+            headers = ["Crop Name:", "Symptoms:", "Most Probable Disease:", "Health Score:", "Recommendations:"]
+            pattern = rf"\*\*{re.escape(heading)}\*\*|\b{re.escape(heading)}"
+            match = re.search(pattern, full_text, re.IGNORECASE)
+            if not match:
+                return ""
+            start_idx = match.end()
+            
+            next_start_idx = len(full_text)
+            for h in headers:
+                if h.lower() == heading.lower():
+                    continue
+                h_pattern = rf"\*\*{re.escape(h)}\*\*|\b{re.escape(h)}"
+                h_match = re.search(h_pattern, full_text[start_idx:], re.IGNORECASE)
+                if h_match:
+                    possible_idx = start_idx + h_match.start()
+                    if possible_idx < next_start_idx:
+                        next_start_idx = possible_idx
+            
+            return full_text[start_idx:next_start_idx].strip()
 
         id_crop = extract_section(reasoning_text, "Crop Name:")
         v_symptoms = extract_section(reasoning_text, "Symptoms:")
@@ -340,7 +446,9 @@ def analyze_crop_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> Dic
             "visual_symptoms": v_symptoms,
             "crop_health_probability": h_score,
             "most_probable_disease": m_prob_disease,
-            "identified_issues": [], "weather_causes": "N/A", "recommendations": recs,
+            "identified_issues": [],
+            "weather_causes": "N/A",
+            "recommendations": recs,
             "confidence_description": "High" if m_prob_disease else "Low",
             "ndvi_score": ndvi_score,
         }

@@ -117,7 +117,7 @@ const DiseasePage = () => {
       </div>
 
       <div className="container detect-page__body">
-        <WeatherWarningCard />
+        {/* <WeatherWarningCard /> */}
         <div className="detect-layout">
           {/* Upload Panel */}
           <div className="upload-panel shadow-elevated-lg">
